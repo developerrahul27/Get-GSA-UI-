@@ -1,10 +1,7 @@
-import type { Application, Filters } from "./types"
+import type { Filters } from "./types"
+import type { Application } from "./interfaces"
+import { inRange } from "./utils"
 
-const inRange = (value: number, min?: number, max?: number) => {
-  if (min != null && value < min) return false
-  if (max != null && value > max) return false
-  return true
-}
 
 export function filterApplications(apps: Application[], f: Filters): Application[] {
   const now = new Date()
@@ -50,41 +47,4 @@ export function sortApplications(apps: Application[], sortBy: Filters["sortBy"],
     return a.fitScore
   }
   return [...apps].sort((a, b) => (getVal(a) - getVal(b)) * dirMul)
-}
-
-export function highlightTitle(title: string, keywords: string[]) {
-  if (keywords.length === 0) return [{ text: title, match: false }]
-  const lower = title.toLowerCase()
-  const matches = keywords
-    .filter(Boolean)
-    .map((k) => k.toLowerCase())
-    .sort((a, b) => b.length - a.length)
-
-  const parts: { text: string; match: boolean }[] = []
-  let i = 0
-  while (i < title.length) {
-    let matched = ""
-    for (const k of matches) {
-      if (lower.slice(i).startsWith(k)) {
-        matched = title.slice(i, i + k.length)
-        break
-      }
-    }
-    if (matched) {
-      parts.push({ text: matched, match: true })
-      i += matched.length
-    } else {
-      parts.push({ text: title[i]!, match: false })
-      i += 1
-    }
-  }
-  const merged: typeof parts = []
-  for (const p of parts) {
-    if (merged.length && !p.match && !merged[merged.length - 1]!.match) {
-      merged[merged.length - 1]!.text += p.text
-    } else {
-      merged.push(p)
-    }
-  }
-  return merged
 }

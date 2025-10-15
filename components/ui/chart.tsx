@@ -2,24 +2,11 @@
 
 import * as React from 'react'
 import * as RechartsPrimitive from 'recharts'
+import type { ChartConfig, ChartContextProps, PayloadItem } from '@/lib/ui-types'
 
 import { cn } from '@/lib/utils'
 
 const THEMES = { light: '', dark: '.dark' } as const
-
-export type ChartConfig = {
-  [k in string]: {
-    label?: React.ReactNode
-    icon?: React.ComponentType
-  } & (
-    | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
-  )
-}
-
-type ChartContextProps = {
-  config: ChartConfig
-}
 
 const ChartContext = React.createContext<ChartContextProps | null>(null)
 
@@ -134,7 +121,7 @@ function ChartTooltipContent({
 
     const [item] = payload
     const key = `${labelKey || item?.dataKey || item?.name || 'value'}`
-    const itemConfig = getPayloadConfigFromPayload(config, item, key)
+    const itemConfig = getPayloadConfigFromPayload(config, item as PayloadItem, key)
     const value =
       !labelKey && typeof label === 'string'
         ? config[label as keyof typeof config]?.label || label
@@ -180,7 +167,7 @@ function ChartTooltipContent({
       <div className="grid gap-1.5">
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || 'value'}`
-          const itemConfig = getPayloadConfigFromPayload(config, item, key)
+          const itemConfig = getPayloadConfigFromPayload(config, item as PayloadItem, key)
           const indicatorColor = color || item.payload.fill || item.color
 
           return (
@@ -305,35 +292,25 @@ function ChartLegendContent({
 
 function getPayloadConfigFromPayload(
   config: ChartConfig,
-  payload: unknown,
+  item: PayloadItem,
   key: string,
 ) {
-  if (typeof payload !== 'object' || payload === null) {
-    return undefined
-  }
-
-  const payloadPayload =
-    'payload' in payload &&
-    typeof payload.payload === 'object' &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined
+  const base = item as Record<string, unknown> & { payload?: Record<string, unknown> }
+  const payloadPayload = base.payload
 
   let configLabelKey: string = key
 
   if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === 'string'
+    key in base &&
+    typeof base[key] === 'string'
   ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
+    configLabelKey = base[key] as string
   } else if (
     payloadPayload &&
     key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === 'string'
+    typeof payloadPayload[key] === 'string'
   ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
+    configLabelKey = payloadPayload[key] as string
   }
 
   return configLabelKey in config

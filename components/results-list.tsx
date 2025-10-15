@@ -8,20 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
-import { filterApplications, highlightTitle, sortApplications } from "@/lib/filtering"
-import type { Application } from "@/lib/types"
+import { filterApplications, sortApplications } from "@/lib/filtering"
+import { highlightTitle, formatDue, fetchJson } from "@/lib/utils"
+import { EXPORT_FILENAME } from "@/lib/constants"
+import type { Application } from "@/lib/interfaces"
 import { useFilters } from "@/hooks/use-filters"
 import { cn } from "@/lib/utils"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-function formatDue(dueISO: string) {
-  const due = new Date(dueISO)
-  const now = new Date()
-  const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  const rel = diffDays >= 0 ? `${diffDays}d left` : `${Math.abs(diffDays)}d past due`
-  return `${rel} • ${due.toLocaleDateString()}`
-}
+const fetcher = (url: string) => fetchJson<Application[]>(url)
 
 export function ResultsList() {
   const { data, isLoading } = useSWR<Application[]>("/data/applications.json", fetcher)
@@ -145,7 +139,7 @@ export function ResultsList() {
               const url = URL.createObjectURL(blob)
               const link = document.createElement('a')
               link.href = url
-              link.download = 'results.csv'
+              link.download = EXPORT_FILENAME
               document.body.appendChild(link)
               link.click()
               document.body.removeChild(link)

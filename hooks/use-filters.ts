@@ -3,15 +3,14 @@
 import React, { useCallback, useEffect, useMemo, useState, createContext, useContext } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { Filters, Preset } from "@/lib/types"
+import { PRESETS_KEY, LAST_VIEW_KEY, STATUS_OVERRIDES_KEY } from "@/lib/constants"
 
-function sanitizePeriod(p: unknown): Filters["period"] {
-  if (p && typeof p === "object" && "type" in (p as any)) {
-    const t = (p as any).type
-    if (t === "none") return { type: "none" }
-    if (t === "next") {
-      const d = Number((p as any).days)
-      if (d === 30 || d === 60 || d === 90) return { type: "next", days: d }
-    }
+function sanitizePeriod(p: Filters["period"] | null | undefined): Filters["period"] {
+  if (!p) return { type: "none" }
+  if (p.type === "none") return { type: "none" }
+  if (p.type === "next") {
+    const d = p.days
+    if (d === 30 || d === 60 || d === 90) return { type: "next", days: d }
   }
   return { type: "none" }
 }
@@ -33,9 +32,6 @@ const DEFAULT_FILTERS: Filters = {
   sortDir: "asc",
 }
 
-const PRESETS_KEY = "gsa.presets.v1"
-const LAST_VIEW_KEY = "gsa.last.filters.v1"
-const STATUS_OVERRIDES_KEY = "gsa.status.overrides.v1"
 
 export type StatusOverrides = Record<string, "Draft" | "Ready" | "Submitted" | "Awarded" | "Lost">
 
@@ -92,11 +88,11 @@ function useFiltersImpl() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as Filters
-        const safePeriod = sanitizePeriod((fromUrl as any).period ?? (parsed as any).period)
+        const safePeriod = sanitizePeriod(fromUrl.period ?? parsed.period)
         return { ...DEFAULT_FILTERS, ...parsed, ...fromUrl, period: safePeriod }
       } catch {}
     }
-    const safePeriod = sanitizePeriod((fromUrl as any).period)
+    const safePeriod = sanitizePeriod(fromUrl.period ?? { type: "none" })
     return { ...DEFAULT_FILTERS, ...fromUrl, period: safePeriod }
   })
   const [applied, setApplied] = useState<Filters>(draft)

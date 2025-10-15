@@ -13,11 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useFilters } from "@/hooks/use-filters"
 import type { Filters } from "@/lib/types"
 import { cn } from "@/lib/utils"
-
-const ALL_NAICS = ["541511", "541512", "541513", "541519", "517311"]
-const ALL_SET_ASIDE = ["SB", "8(a)", "WOSB", "SDVOSB", "HUBZone", "VOSB"]
-const ALL_VEHICLE = ["GSA MAS", "Alliant 2", "CIO-SP3"]
-const ALL_AGENCIES = ["GSA", "USDA", "DOE", "HHS", "VA", "DHS", "DOC", "DOD", "NOAA", "SSA"]
+import { ALL_NAICS, ALL_SET_ASIDE, ALL_VEHICLE, ALL_AGENCIES } from "@/lib/constants"
 
 export function ParameterPanel() {
   const { draft, setDraft, apply, resetAll, presets, savePreset, loadPreset } = useFilters()
